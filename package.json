@@ -1,0 +1,20 @@
+{
+  "name": "swagger-to-ts",
+  "version": "0.1.0",
+  "title": "TypeScript API clients generator from Swagger",
+  "author": "Usman Ayupov <au073@mail.ru>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ajupov/swagger-to-ts.git"
+  },
+  "scripts": {
+    "start": "bin"
+  },
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "bin": {
+    "swagger-to-ts": "./index.js"
+  }
+}
