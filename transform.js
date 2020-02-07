@@ -1,3 +1,5 @@
-export default function transform(json) {
+function transform(json) {
     return json
 }
+
+module.exports = transform

@@ -9,7 +9,7 @@
     "url": "https://github.com/ajupov/swagger-to-ts.git"
   },
   "scripts": {
-    "start": "bin"
+    "start": "node ./index.js --input=./swagger.json --output=./api.ts"
   },
   "engines": {
     "node": ">=6.0.0"
