@@ -9,12 +9,16 @@
     "url": "https://github.com/ajupov/swagger-to-ts.git"
   },
   "scripts": {
-    "start": "node ./index.js --input=./swagger.json --output=./api.ts"
+    "start-local": "node ./index.js --input=./swagger.json --output=./api.ts",
+    "start-url": "node ./index.js --input=http://api.litecrm.org/swagger/v1/swagger.json --output=./api"
   },
   "engines": {
     "node": ">=6.0.0"
   },
   "bin": {
     "swagger-to-ts": "./index.js"
+  },
+  "dependencies": {
+    "sync-request": "^6.1.0"
   }
 }

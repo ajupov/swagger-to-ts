@@ -3191,18 +3191,6 @@
         }
       }
     },
-    "/": {
-      "get": {
-        "tags": [
-          "Home"
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
     "/Leads/Attributes/Changes/v1/GetPagedList": {
       "post": {
         "tags": [

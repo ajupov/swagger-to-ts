@@ -2,7 +2,9 @@
 
 const { argv, hrtime } = require('process')
 const { readFileSync, writeFileSync } = require('fs')
+const http = require('http')
 const transform = require('./transform')
+var request = require('sync-request')
 
 let timer = hrtime()
 
@@ -16,12 +18,6 @@ if (!inputArgs) {
 const inputPath = inputArgs.substr('--input='.length)
 if (!inputPath) {
     console.error('No input path provided.')
-
-    return 0
-}
-
-if (!inputPath.endsWith('.json')) {
-    console.error(`Input file "${inputPath}" not json file.`)
 
     return 0
 }
@@ -42,17 +38,17 @@ if (!outputPath.endsWith('.ts')) {
 
 // TODO: move
 let unparsedJson
-if (inputPath.endsWith('.json')) {
+if (inputPath.startsWith('http')) {
     try {
-        unparsedJson = readFileSync(inputPath, 'utf8')
+        unparsedJson = request('GET', inputPath).getBody()
     } catch (error) {
         console.error(`Configuration file "${inputPath}" not found.`)
 
         return 0
     }
-} else if (inputPath.startsWith('http')) {
+} else if (inputPath.endsWith('.json')) {
     try {
-        unparsedJson = httpclient.getAsString(inputPath)
+        unparsedJson = readFileSync(inputPath, 'utf8')
     } catch (error) {
         console.error(`Configuration file "${inputPath}" not found.`)
 
