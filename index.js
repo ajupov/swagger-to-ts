@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 const { argv, hrtime } = require('process')
-const { readFileSync, writeFileSync } = require('fs')
-const http = require('http')
+const { readFileSync, writeFileSync, mkdirSync, existsSync } = require('fs')
+const { join } = require('path')
 const transform = require('./transform')
 var request = require('sync-request')
 
@@ -30,7 +30,7 @@ if (!outputArgs) {
 }
 
 const outputPath = outputArgs.substr('--output='.length)
-if (!outputPath.endsWith('.ts')) {
+if (!outputPath) {
     console.error(`Output file "${inputPath}" not .ts file.`)
 
     return 0
@@ -81,7 +81,16 @@ try {
 }
 
 try {
-    writeFileSync(outputPath, JSON.stringify(result))
+    for (const folder of result) {
+        const folderPath = join(__dirname, outputPath, folder.name)
+        if (!existsSync(folderPath)) {
+            mkdirSync(folderPath, { recursive: true })
+        }
+
+        for (const file of folder.files) {
+            writeFileSync(file.name, JSON.stringify(file.actions))
+        }
+    }
 
     timer = hrtime(timer)
     console.log('Done in %d.%d seconds.', timer[0], timer[1])
