@@ -86,8 +86,24 @@ function getParameters(method, pathInfo) {
         case DeleteMethod:
             const schema = pathInfo[method].requestBody.content[ApplicationJsonContentType].schema
             const type = getType(schema)
+
+            let name = ''
+            switch (type) {
+                case 'boolean[]':
+                case 'number[]':
+                case 'string[]':
+                    name = 'values'
+                    break
+                default:
+                    name = type
+                        .split(/(?=[A-Z])/)
+                        .slice(-1)[0]
+                        .toLowerCase()
+                    break
+            }
+
             const parameter = {
-                name: type,
+                name: name,
                 required: true,
                 type: type
             }

@@ -89,19 +89,18 @@ function generateMethodContent(action) {
     const parametersContent = generateMethodParameters(action.parameters)
     const returnTypeContent = generateMethodReturnType(action.returnType)
 
-    const url = action.path
+    const url = generateHttpUrl(action.path)
     const httpMethod = generateHttpMethod(action.httpMethod)
     const httpMethodReturnType = generateHttpMethodReturnType(action.returnType)
     const httpMethodParameters = generateHttpMethodParameters(action.parameters)
 
     return (
         `\n` +
-        `    // prettier-ignore` +
+        `    // prettier-ignore\n` +
         `    public ${action.name} = (${parametersContent}): ${returnTypeContent} =>\n` +
-        `        this.httpClientFactory` +
-        `            .createClient(this.httpClientFactory.host)` +
-        `            .${httpMethod}${httpMethodReturnType}(${url}${httpMethodParameters})` +
-        '    }'
+        `        this.httpClientFactory\n` +
+        `            .createClient(this.httpClientFactory.host)\n` +
+        `            .${httpMethod}${httpMethodReturnType}(${url}${httpMethodParameters})\n`
     )
 }
 
@@ -120,13 +119,17 @@ function generateMethodParameters(parameters) {
 }
 
 function generateMethodParameter(parameter) {
-    const required = parameter.required ? '?' : ''
+    const required = parameter.required ? '' : '?'
 
     return `${parameter.name}${required}: ${parameter.type}`
 }
 
 function generateMethodReturnType(returnType) {
-    return returnType ? `Promise<${action.returnType}>` : 'Promise'
+    return returnType ? `Promise<${returnType}>` : 'Promise'
+}
+
+function generateHttpUrl(path) {
+    return `'${path}'`
 }
 
 function generateHttpMethod(httpMethod) {
@@ -151,15 +154,15 @@ function generateHttpMethodParameters(parameters) {
     return `, { ${parametersString} }`
 }
 
-function generateHttpMethodParameter() {
-    switch (parameters[0].type) {
+function generateHttpMethodParameter(parameter) {
+    switch (parameter.type) {
         case 'boolean':
         case 'number':
         case 'string':
-            return `{ ${parameters[0].name} }`
+            return `{ ${parameter.name} }`
 
         default:
-            return parameters[0].name
+            return parameter.name
     }
 }
 
@@ -175,7 +178,7 @@ try {
         // Generate 'activities/clients' folder
         const clientsFolderPath = join(folderPath, 'clients')
         if (!existsSync(clientsFolderPath)) {
-            mkdirSync(folderPath, { recursive: true })
+            mkdirSync(clientsFolderPath, { recursive: true })
         }
 
         // Generate 'activities/models' folder
@@ -197,6 +200,6 @@ try {
     console.log('Done in %d.%d seconds.', timer[0], timer[1])
 } catch (error) {
     timer = hrtime(timer)
-
+    console.error(error)
     console.error('Error in %d.%d seconds.', timer[0], timer[1])
 }
