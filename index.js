@@ -80,6 +80,32 @@ try {
     return 0
 }
 
+///////////////////
+
+const apiEndpoint = 'http://api.litecrm.org'
+// httpClientFactory.create('host').get('url', {id})
+// httpClientFactory.create('host').post('url', data)
+
+function mapClass(file) {
+    return (
+        `export default class ${file.name} {${NewLine}` +
+        `${file.actions.map(action => mapMethod(action)).join(NewLine)}` +
+        `${NewLine}}`
+    )
+}
+
+function mapMethod(action) {
+    return (
+        `    public static ${action.name}(${action.parameters}): Promise<${action.returnType}>${NewLine}` +
+        `        return createClient<${action.returnType}>('${apiEndpoint + action.path}', '${
+            action.httpMethod
+        }')${NewLine}${NewLine}` +
+        '   }'
+    )
+}
+
+const NewLine = '\n'
+
 try {
     for (const folder of result) {
         const folderPath = join(__dirname, outputPath, folder.name)
@@ -88,7 +114,9 @@ try {
         }
 
         for (const file of folder.files) {
-            writeFileSync(file.name, JSON.stringify(file.actions))
+            let content = mapClass(file)
+
+            writeFileSync(join(folderPath, file.name + '.ts'), content)
         }
     }
 
@@ -98,6 +126,7 @@ try {
     return 0
 } catch (error) {
     timer = hrtime(timer)
+    console.error(error)
     console.error('Error in %d.%d seconds.', timer[0], timer[1])
 
     return 0

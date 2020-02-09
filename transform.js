@@ -35,7 +35,7 @@ function getFolder(folders, folderName) {
 }
 
 function getFileName(methodInfo) {
-    return methodInfo.tags[0] + 'Client.ts'
+    return methodInfo.tags[0] + 'Client'
 }
 
 function getFile(folder, fileName) {
@@ -158,7 +158,8 @@ function transform(json) {
                 name: actionName,
                 returnType: returnType,
                 parameters: parameters,
-                httpMethod: method.toUpperCase()
+                httpMethod: method.toUpperCase(),
+                path: path
             }
 
             file.actions.push(actionInfo)
