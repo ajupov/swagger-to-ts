@@ -9,8 +9,8 @@
     "url": "https://github.com/ajupov/swagger-to-ts.git"
   },
   "scripts": {
-    "start-local": "node ./index.js --input=./swagger.json --output=./api.ts",
-    "start-url": "node ./index.js --input=http://api.litecrm.org/swagger/v1/swagger.json --output=./api"
+    "generate-by-local": "node ./src/index.js --input=./files/swagger.json --output=../.generated/api",
+    "generate-by-url": "node ./src/index.js --input=http://api.litecrm.org/swagger/v1/swagger.json --output=../.generated/api"
   },
   "engines": {
     "node": ">=6.0.0"

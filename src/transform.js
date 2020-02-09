@@ -10,7 +10,6 @@ const ReferenceObject = '$ref'
 // Only Content-Type: application/json
 // Only HTTP Methods: GET, POST
 // Not support Mixed-Types
-// Not support more of 2 dimension arrays in return type
 // Not support object without $ref return type
 
 function getActionName(path) {
@@ -106,14 +105,14 @@ function getType(schema) {
     }
 
     switch (schema.type) {
-        case 'string':
-            return 'string'
+        case 'boolean':
+            return 'boolean'
 
         case 'integer':
             return 'number'
 
-        case 'boolean':
-            return 'boolean'
+        case 'string':
+            return 'string'
 
         case 'object':
             const additionalProperties = schema.additionalProperties
@@ -121,14 +120,10 @@ function getType(schema) {
                 if (additionalProperties[ReferenceObject]) {
                     return additionalProperties[ReferenceObject].split('/').slice(-1)[0] + '[]'
                 } else {
-                    console.error()
-
-                    debugger
+                    throw 'error'
                 }
             } else {
-                console.error()
-
-                debugger
+                throw 'error'
             }
 
         case 'array':
@@ -154,7 +149,7 @@ function transform(json) {
             const returnType = getReturnType(method, pathInfo)
             const parameters = getParameters(method, pathInfo)
 
-            const actionInfo = {
+            const action = {
                 name: actionName,
                 returnType: returnType,
                 parameters: parameters,
@@ -162,7 +157,7 @@ function transform(json) {
                 path: path
             }
 
-            file.actions.push(actionInfo)
+            file.actions.push(action)
         }
     }
 
