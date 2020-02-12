@@ -360,72 +360,89 @@ function putModelFile(components, folder, _import) {
 
     const fields = []
     const imports = []
+    let isEnum = false
 
-    switch (component.type) {
-        case 'object':
-            for (const [propertyName, propertyInfo] of Object.entries(component.properties)) {
-                const arrayType = getTypeFromArray(propertyInfo)
-                const typeWithRef = getTypeByRef(propertyInfo)
-                const typeFromObject = getTypeFromObject(propertyInfo)
+    if (component.enum) {
+        isEnum = true
 
-                if (arrayType) {
-                    const field = {
-                        name: propertyName,
-                        type: arrayType.type,
-                        required: !propertyInfo.nullable
-                    }
-
-                    fields.push(field)
-                    imports.push(arrayType.importType)
-
-                    putModelFile(components, folder, arrayType.importType)
-                } else if (typeWithRef) {
-                    const field = {
-                        name: propertyName,
-                        type: typeWithRef.type,
-                        required: !propertyInfo.nullable
-                    }
-
-                    fields.push(field)
-                    imports.push(typeWithRef.importType)
-
-                    putModelFile(components, folder, typeWithRef.importType)
-                } else if (typeFromObject) {
-                    const field = {
-                        name: propertyName,
-                        type: typeFromObject.type,
-                        required: !propertyInfo.nullable
-                    }
-
-                    fields.push(field)
-                    imports.push(typeFromObject.importType)
-
-                    putModelFile(components, folder, typeFromObject.importType)
-                } else if (propertyInfo.enum) {
-                } else if (propertyInfo.allOf) {
-                    const _enum = propertyInfo.allOf[0]
-                    const typeWithRef = getTypeByRef(_enum)
-                    const field = {
-                        name: propertyName,
-                        type: typeWithRef.type,
-                        required: !propertyInfo.nullable
-                    }
-
-                    fields.push(field)
-                } else {
-                    const field = {
-                        name: propertyName,
-                        type: getType(propertyInfo.type).type,
-                        required: !propertyInfo.nullable
-                    }
-
-                    fields.push(field)
-                }
+        for (const v of component.enum) {
+            const field = {
+                name: `_${v}`,
+                type: v,
+                required: true
             }
+
+            fields.push(field)
+        }
+    } else if (component.type === 'object') {
+        for (const [propertyName, propertyInfo] of Object.entries(component.properties)) {
+            const arrayType = getTypeFromArray(propertyInfo)
+            const typeWithRef = getTypeByRef(propertyInfo)
+            const typeFromObject = getTypeFromObject(propertyInfo)
+
+            if (arrayType) {
+                const field = {
+                    name: propertyName,
+                    type: arrayType.type,
+                    required: !propertyInfo.nullable
+                }
+
+                fields.push(field)
+                imports.push(arrayType.importType)
+
+                putModelFile(components, folder, arrayType.importType)
+            } else if (typeWithRef) {
+                const field = {
+                    name: propertyName,
+                    type: typeWithRef.type,
+                    required: !propertyInfo.nullable
+                }
+
+                fields.push(field)
+                imports.push(typeWithRef.importType)
+
+                putModelFile(components, folder, typeWithRef.importType)
+            } else if (typeFromObject) {
+                const field = {
+                    name: propertyName,
+                    type: typeFromObject.type,
+                    required: !propertyInfo.nullable
+                }
+
+                fields.push(field)
+                imports.push(typeFromObject.importType)
+
+                putModelFile(components, folder, typeFromObject.importType)
+            } else if (propertyInfo.enum) {
+                // throw error
+            } else if (propertyInfo.allOf) {
+                const _enum = propertyInfo.allOf[0]
+                const typeWithRef = getTypeByRef(_enum)
+                const field = {
+                    name: propertyName,
+                    type: typeWithRef.type,
+                    required: !propertyInfo.nullable
+                }
+
+                fields.push(field)
+                imports.push(typeWithRef.importType)
+
+                putModelFile(components, folder, typeWithRef.importType)
+            } else {
+                const field = {
+                    name: propertyName,
+                    type: getType(propertyInfo.type).type,
+                    required: !propertyInfo.nullable
+                }
+
+                fields.push(field)
+            }
+        }
     }
 
     modelFile = {
         name: _import,
+        isEnum: isEnum,
         imports: imports.filter((_i, index, array) => array.indexOf(_i) === index && _i),
         fields: fields
     }

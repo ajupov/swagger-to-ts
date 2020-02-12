@@ -92,8 +92,8 @@ function generateClientFileContent(file) {
         `    constructor(httpClientFactory: IHttpClientFactory) {\n` +
         `        this.httpClientFactory = httpClientFactory\n` +
         `    }\n` +
-        `${generateMethodsContent(file.actions)}` +
-        `}`
+        `${generateMethodsContent(file.actions)}\n` +
+        `}\n`
     )
 }
 
@@ -106,7 +106,22 @@ function generateModelFileContent(file) {
         `${importsContent ? importsContent + '\n\n' : ''}` +
         `export default interface ${fileNameWithUnderscore} {\n` +
         `${fieldsContent}\n` +
-        `}`
+        `}\n`
+    )
+}
+
+function generateEnumFileContent(file) {
+    const importsContent = generateImportsContent(file.imports)
+    const fileNameWithUnderscore = file.name.replace(/\./g, '_')
+    const fieldsContent = generateEnumFieldsContent(file.fields)
+
+    return (
+        `${importsContent ? importsContent + '\n\n' : ''}` +
+        `const enum ${fileNameWithUnderscore} {\n` +
+        `${fieldsContent}\n` +
+        `}\n` +
+        `\n` +
+        `export default ${fileNameWithUnderscore}\n`
     )
 }
 
@@ -128,6 +143,14 @@ function generateMethodsContent(actions) {
 
 function generateFieldsContent(fields) {
     return fields.map(field => generateFieldContent(field)).join('\n')
+}
+
+function generateEnumFieldsContent(fields) {
+    return fields.map(field => generateEnumFieldContent(field)).join(',\n')
+}
+
+function generateEnumFieldContent(field) {
+    return `    ${field.name} = ${field.type}`
 }
 
 function generateFieldContent(field) {
@@ -152,7 +175,7 @@ function generateMethodContent(action) {
         `    public ${action.name} = (${parametersContent}): ${returnTypeContent} =>\n` +
         `        this.httpClientFactory\n` +
         `            .createClient(this.httpClientFactory.host)\n` +
-        `            .${httpMethod}${httpMethodReturnType}(${url}${httpMethodParameters})\n`
+        `            .${httpMethod}${httpMethodReturnType}(${url}${httpMethodParameters})`
     )
 }
 
@@ -269,7 +292,7 @@ try {
 
             const fileNameWithUnderscore = file.name.replace(/\./g, '_')
             const filePath = join(modelsFolderPath, fileNameWithUnderscore + '.ts')
-            const fileContent = generateModelFileContent(file)
+            const fileContent = file.isEnum ? generateEnumFileContent(file) : generateModelFileContent(file)
 
             writeFileSync(filePath, fileContent)
         }
