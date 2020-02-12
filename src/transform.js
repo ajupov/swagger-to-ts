@@ -414,7 +414,40 @@ function putModelFile(components, folder, _import) {
 
                 putModelFile(components, folder, typeFromObject.importType)
             } else if (propertyInfo.enum) {
-                // throw error
+                const enumTypeName = _import + 'Type'
+
+                const field = {
+                    name: propertyName,
+                    type: enumTypeName,
+                    required: !propertyInfo.nullable
+                }
+
+                fields.push(field)
+                imports.push(enumTypeName)
+
+                const enumFields = []
+
+                for (let i = 0; i < propertyInfo.enum.length; i++) {
+                    const elementValue = propertyInfo.enum[i]
+                    const elementName = propertyInfo.enumNames[i]
+
+                    const field = {
+                        name: elementName || `_${elementValue}`,
+                        type: elementValue,
+                        required: true
+                    }
+
+                    enumFields.push(field)
+                }
+
+                modelFile = {
+                    name: enumTypeName,
+                    isEnum: true,
+                    imports: [],
+                    fields: enumFields
+                }
+
+                folder.modelFiles.push(modelFile)
             } else if (propertyInfo.allOf) {
                 const _enum = propertyInfo.allOf[0]
                 const typeWithRef = getTypeByRef(_enum)
