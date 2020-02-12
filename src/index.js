@@ -178,7 +178,7 @@ function generateMethodParameter(parameter) {
 }
 
 function generateMethodReturnType(returnType) {
-    if (!returnType.type) {
+    if (!returnType || !returnType.type) {
         return 'Promise<void>'
     }
 
@@ -196,7 +196,7 @@ function generateHttpMethod(httpMethod) {
 }
 
 function generateHttpMethodReturnType(returnType) {
-    if (!returnType.type) {
+    if (!returnType || !returnType.type) {
         return ''
     }
 

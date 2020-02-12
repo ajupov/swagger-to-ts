@@ -150,7 +150,56 @@ function getParameters(method, pathInfo) {
                 return parameters
             }
 
-            throw 'error'
+            const content =
+                pathInfo[method].requestBody && pathInfo[method].requestBody.content[ApplicationJsonContentType]
+
+            if (!content) {
+                return []
+            }
+
+            if (content.schema) {
+                const type = getTypeBySchema(content.schema)
+
+                let name = ''
+
+                if (!content.name) {
+                    switch (type.type) {
+                        case 'boolean[]':
+                        case 'number[]':
+                        case 'string[]':
+                            name = 'values'
+                            break
+                        default:
+                            name = type.type
+                                .split(/(?=[A-Z])/)
+                                .slice(-1)[0]
+                                .toLowerCase()
+                            break
+                    }
+                } else {
+                    name = content.name
+                }
+
+                const parameter = {
+                    name: name,
+                    required: content.required,
+                    type: type.type,
+                    importType: type.importType
+                }
+
+                return [parameter]
+            } else {
+                const type = getType(pathInfoParameter.type)
+
+                const parameter = {
+                    name: content.name,
+                    required: content.required,
+                    type: type.type,
+                    importType: type.importType
+                }
+
+                return [parameter]
+            }
 
         default:
             return []
@@ -168,6 +217,9 @@ function getType(type) {
 
         case 'string':
             return { type: 'string', importType: undefined }
+
+        case 'object':
+            return { type: 'object', importType: undefined }
 
         default:
             return undefined
@@ -201,6 +253,23 @@ function getTypeFromArray(schema) {
     return undefined
 }
 
+function getTypeFromObject(schema) {
+    if (schema.type === 'object') {
+        const additionalProperties = schema.additionalProperties
+        if (additionalProperties) {
+            if (additionalProperties[ReferenceObject]) {
+                const type = additionalProperties[ReferenceObject].split('/').slice(-1)[0]
+
+                return { type: type + '[]', importType: type }
+            } else {
+                return { type: additionalProperties.type + '[]', importType: undefined }
+            }
+        }
+    }
+
+    return undefined
+}
+
 function getTypeBySchema(schema) {
     const typeWithRef = getTypeByRef(schema)
     if (typeWithRef) {
@@ -212,25 +281,14 @@ function getTypeBySchema(schema) {
         return arrayType
     }
 
+    const typeFromObject = getTypeFromObject(schema.type)
+    if (typeFromObject) {
+        return typeFromObject
+    }
+
     const type = getType(schema.type)
     if (type) {
         return type
-    }
-
-    switch (schema.type) {
-        case 'object':
-            const additionalProperties = schema.additionalProperties
-            if (additionalProperties) {
-                if (additionalProperties[ReferenceObject]) {
-                    const type = additionalProperties[ReferenceObject].split('/').slice(-1)[0]
-
-                    return { type: type + '[]', importType: type }
-                } else {
-                    throw 'error'
-                }
-            } else {
-                return { type: 'object', importType: undefined }
-            }
     }
 }
 
@@ -257,20 +315,25 @@ function transform(json) {
                 path: path
             }
 
-            const imports = (parameters && parameters.length > 0
-                ? [...parameters.map(x => x.importType), returnType.importType]
-                : [returnType.importType]
-            ).filter(x => x)
+            let imports = []
+
+            if (parameters && parameters.length > 0) {
+                imports = [...imports, ...parameters.map(x => x.importType)]
+            }
+
+            if (returnType && returnType.importType) {
+                imports.push(returnType.importType)
+            }
 
             clientFile.actions.push(action)
 
             clientFile.imports = clientFile.imports
-                .concat(imports)
+                .concat(imports.filter(x => x))
                 .filter((_import, index, array) => array.indexOf(_import) === index && _import)
         }
     }
 
-    const components = json.components || json.definitions
+    const components = (json.components && json.components.schemas) || json.definitions
 
     for (const folder of folders) {
         for (const clientFile of folder.clientFiles) {
@@ -303,6 +366,7 @@ function putModelFile(components, folder, _import) {
             for (const [propertyName, propertyInfo] of Object.entries(component.properties)) {
                 const arrayType = getTypeFromArray(propertyInfo)
                 const typeWithRef = getTypeByRef(propertyInfo)
+                const typeFromObject = getTypeFromObject(propertyInfo)
 
                 if (arrayType) {
                     const field = {
@@ -326,7 +390,28 @@ function putModelFile(components, folder, _import) {
                     imports.push(typeWithRef.importType)
 
                     putModelFile(components, folder, typeWithRef.importType)
+                } else if (typeFromObject) {
+                    const field = {
+                        name: propertyName,
+                        type: typeFromObject.type,
+                        required: !propertyInfo.nullable
+                    }
+
+                    fields.push(field)
+                    imports.push(typeFromObject.importType)
+
+                    putModelFile(components, folder, typeFromObject.importType)
                 } else if (propertyInfo.enum) {
+                } else if (propertyInfo.allOf) {
+                    const _enum = propertyInfo.allOf[0]
+                    const typeWithRef = getTypeByRef(_enum)
+                    const field = {
+                        name: propertyName,
+                        type: typeWithRef.type,
+                        required: !propertyInfo.nullable
+                    }
+
+                    fields.push(field)
                 } else {
                     const field = {
                         name: propertyName,
