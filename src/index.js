@@ -104,7 +104,9 @@ function generateImportsContent(imports) {
 }
 
 function generateImportContent(_import) {
-    return `import ${_import} from '../models/${_import}'`
+    const importWithUnderscore = _import.replace(/\./g, '_')
+
+    return `import ${importWithUnderscore} from '../models/${importWithUnderscore}'`
 }
 
 function generateMethodsContent(actions) {
@@ -146,12 +148,19 @@ function generateMethodParameters(parameters) {
 
 function generateMethodParameter(parameter) {
     const required = parameter.required ? '' : '?'
+    const parameterTypeWithUnderscore = parameter.type.replace(/\./g, '_')
 
-    return `${parameter.name}${required}: ${parameter.type}`
+    return `${parameter.name}${required}: ${parameterTypeWithUnderscore}`
 }
 
 function generateMethodReturnType(returnType) {
-    return returnType.type ? `Promise<${returnType.type}>` : 'Promise<void>'
+    if (!returnType.type) {
+        return 'Promise<void>'
+    }
+
+    const returnTypeWithUnderscore = returnType.type.replace(/\./g, '_')
+
+    return `Promise<${returnTypeWithUnderscore}>`
 }
 
 function generateHttpUrl(path) {
@@ -163,7 +172,13 @@ function generateHttpMethod(httpMethod) {
 }
 
 function generateHttpMethodReturnType(returnType) {
-    return returnType.type ? `<${returnType.type}>` : ''
+    if (!returnType.type) {
+        return ''
+    }
+
+    const returnTypeWithUnderscore = returnType.type.replace(/\./g, '_')
+
+    return `<${returnTypeWithUnderscore}>`
 }
 
 function generateHttpMethodParameters(parameters) {

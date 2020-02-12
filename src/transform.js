@@ -52,7 +52,6 @@ function getClientFile(folder, fileName) {
     if (!file) {
         file = {
             name: fileName,
-            models: [],
             actions: [],
             imports: []
         }
@@ -204,15 +203,24 @@ function getType(type) {
     }
 }
 
-function getTypeBySchema(schema) {
-    const objectPath = schema[ReferenceObject]
+function getTypeByRef(typeWithRef) {
+    const objectPath = typeWithRef[ReferenceObject]
     if (objectPath) {
         // Dodo.RestaurantCashier.Web.Areas.v2.Models.Products.GetMenuItemResponse
         // GetMenuItemResponse
         const type = objectPath.split('/').slice(-1)[0]
-        const typeUnderscored = type.replace(/\./g, '_')
+        // const typeUnderscored = type.replace(/\./g, '_')
 
-        return { type: typeUnderscored, importType: typeUnderscored }
+        return { type: type, importType: type }
+    }
+
+    return undefined
+}
+
+function getTypeBySchema(schema) {
+    const typeWithRef = getTypeByRef(schema)
+    if (typeWithRef) {
+        return typeWithRef
     }
 
     const type = getType(schema.type)
@@ -227,9 +235,9 @@ function getTypeBySchema(schema) {
                 if (additionalProperties[ReferenceObject]) {
                     // Dodo.RestaurantCashier.Web.Areas.v2.Models.Products.GetMenuItemResponse
                     const type = additionalProperties[ReferenceObject].split('/').slice(-1)[0]
-                    const typeUnderscored = type.replace(/\./g, '_')
+                    // const typeUnderscored = type.replace(/\./g, '_')
 
-                    return { type: typeUnderscored + '[]', importType: typeUnderscored }
+                    return { type: type + '[]', importType: type }
                 } else {
                     throw 'error'
                 }
@@ -241,9 +249,9 @@ function getTypeBySchema(schema) {
             if (schema.items[ReferenceObject]) {
                 // Dodo.RestaurantCashier.Web.Areas.v2.Models.Products.GetMenuItemResponse
                 const type = schema.items[ReferenceObject].split('/').slice(-1)[0]
-                const typeUnderscored = type.replace(/\./g, '_')
+                // const typeUnderscored = type.replace(/\./g, '_')
 
-                return { type: typeUnderscored + '[]', importType: typeUnderscored }
+                return { type: type + '[]', importType: type }
             } else {
                 const type = getTypeBySchema(schema.items)
 
@@ -255,20 +263,19 @@ function getTypeBySchema(schema) {
 function transform(json) {
     let folders = []
 
+    // /v2/Products/GetPizzas
     for (const [path, pathInfo] of Object.entries(json.paths)) {
         // GetPizzas
         const actionName = getActionName(path)
 
         // v2
         const folderName = getFolderName(path)
-
-        // clients
         const folder = getFolder(folders, folderName)
 
         for (const [method, methodInfo] of Object.entries(pathInfo)) {
             // ProductsClient
             const fileName = getFileName(methodInfo)
-            const file = getClientFile(folder, fileName)
+            const clientFile = getClientFile(folder, fileName)
 
             const returnType = getReturnType(method, pathInfo)
             const parameters = getParameters(method, pathInfo)
@@ -281,61 +288,72 @@ function transform(json) {
                 path: path
             }
 
-            // if (isModelType(returnType.importType) && !file.models.find(x => x.name === returnType.importType)){
-            //     const schema = json.components.schemas[returnType.importType]
-
-            //    switch (schema.type ){
-            //        case 'object':
-            //             const fields = []
-
-            //            for(const [fieldName, fieldInfo] of Object.entries(schema.properties)){
-            //             const field = {
-            //                 name: fieldName,
-            //                 type:
-            //             }
-
-            //             fields.push({
-
-            //             })
-            //            }
-            //    }
-            //     file.models.push({
-            //         name: returnType.importType,
-            //         type: schema.type,
-            //         fields: schema.type === 'object' ?  schema.properties
-            //     })
-            // }
-
-            // [undefined, undefined]
             const imports = (parameters && parameters.length > 0
                 ? [...parameters.map(x => x.importType), returnType.importType]
                 : [returnType.importType]
             ).filter(x => x)
 
-            file.actions.push(action)
+            clientFile.actions.push(action)
 
-            file.imports = file.imports
+            clientFile.imports = clientFile.imports
                 .concat(imports)
                 .filter((_import, index, array) => array.indexOf(_import) === index && _import)
         }
     }
 
-    // for (const folder of folders) {
-    //     for (const clientFile of folder.clientFiles) {
-    //         for (const _import of clientFile.imports) {
-    //             let model = folder.modelFiles.find(x => x.name === _import)
-    //             if (model) {
-    //                 continue
-    //             }
+    // fill components
+    const components = json.components || json.definitions
 
-    //             model = {
-    //                 name: _import
-    //             }
+    for (const folder of folders) {
+        for (const clientFile of folder.clientFiles) {
+            for (const _import of clientFile.imports) {
+                const component = components[_import]
 
-    //             folder.modelFiles.push(model)
-    //         }
-    //     }
-    // }
+                let modelFile = folder.modelFiles.find(x => x.name === _import)
+                if (modelFile) {
+                    continue
+                }
+
+                // create new modelFile
+                const fields = []
+                const imports = []
+
+                switch (component.type) {
+                    case 'object':
+                        for (const [propertyName, propertyInfo] of Object.entries(component.properties)) {
+                            const typeWithRef = getTypeByRef(propertyInfo)
+                            if (typeWithRef) {
+                                const field = {
+                                    name: propertyName,
+                                    type: typeWithRef.type,
+                                    required: !propertyInfo.nullable
+                                }
+
+                                fields.push(field)
+                                imports.push(typeWithRef.importType)
+                            }
+
+                            if (propertyInfo.enum) {
+                            } else {
+                                const field = {
+                                    name: propertyName,
+                                    type: getType(propertyInfo.type),
+                                    required: !propertyInfo.nullable
+                                }
+
+                                fields.push(field)
+                            }
+                        }
+                }
+
+                modelFile = {
+                    name: _import,
+                    imports: imports.filter((_i, index, array) => array.indexOf(_i) === index && _i),
+                    fields: fields
+                }
+            }
+        }
+    }
 
     return folders
 }
