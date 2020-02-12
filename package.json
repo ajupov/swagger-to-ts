@@ -10,8 +10,8 @@
   },
   "scripts": {
     "generate": "node ./src/index.js --input=./files/v2.json --output=../.generated",
-    "generate-by-local": "node ./src/index.js --input=./files/swagger.json --output=../.generated/api",
-    "generate-by-url": "node ./src/index.js --input=http://api.litecrm.org/swagger/v1/swagger.json --output=../.generated/api"
+    "generate-by-local": "node ./src/index.js --input=./files/swagger.json --output=../.generated",
+    "generate-by-url": "node ./src/index.js --input=http://api.litecrm.org/swagger/v1/swagger.json --output=../.generated"
   },
   "engines": {
     "node": ">=6.0.0"

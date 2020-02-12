@@ -331,9 +331,7 @@ function transform(json) {
 
                                 fields.push(field)
                                 imports.push(typeWithRef.importType)
-                            }
-
-                            if (propertyInfo.enum) {
+                            } else if (propertyInfo.enum) {
                             } else {
                                 const field = {
                                     name: propertyName,
@@ -351,6 +349,8 @@ function transform(json) {
                     imports: imports.filter((_i, index, array) => array.indexOf(_i) === index && _i),
                     fields: fields
                 }
+
+                folder.modelFiles.push(modelFile)
             }
         }
     }

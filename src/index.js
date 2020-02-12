@@ -81,7 +81,7 @@ function getIHttpClientFactoryContent() {
     )
 }
 
-function generateClassContent(file) {
+function generateClientFileContent(file) {
     return (
         `import IHttpClientFactory from '../../IHttpClientFactory'` +
         `${generateImportsContent(file.imports)}\n` +
@@ -93,6 +93,18 @@ function generateClassContent(file) {
         `        this.httpClientFactory = httpClientFactory\n` +
         `    }\n` +
         `${generateMethodsContent(file.actions)}` +
+        `}`
+    )
+}
+
+function generateModelFileContent(file) {
+    const importsContent = generateImportsContent(file.imports)
+    const fileNameWithUnderscore = file.name.replace(/\./g, '_')
+
+    return (
+        `${importsContent ? importsContent + '\n\n' : ''}` +
+        `export default interface ${fileNameWithUnderscore} {\n` +
+        // `${generateMethodsContent(file.actions)}` +
         `}`
     )
 }
@@ -208,7 +220,7 @@ function generateHttpMethodParameter(parameter) {
 }
 
 try {
-    // Generate 'api' folder
+    // Generate '.generated' folder
     if (!existsSync(outputPath)) {
         mkdirSync(outputPath, { recursive: true })
     }
@@ -226,16 +238,27 @@ try {
             mkdirSync(clientsFolderPath, { recursive: true })
         }
 
+        for (const file of folder.clientFiles) {
+            // ProductsClient.ts
+            const filePath = join(clientsFolderPath, file.name + '.ts')
+            const fileContent = generateClientFileContent(file)
+
+            writeFileSync(filePath, fileContent)
+        }
+
         // products/models
         const modelsFolderPath = join(folderPath, 'models')
         if (!existsSync(modelsFolderPath)) {
             mkdirSync(modelsFolderPath, { recursive: true })
         }
 
-        for (const file of folder.clientFiles) {
-            // ProductsClient.ts
-            const filePath = join(clientsFolderPath, file.name + '.ts')
-            const fileContent = generateClassContent(file)
+        for (const file of folder.modelFiles) {
+            // Model.ts
+
+            const fileNameWithUnderscore = file.name.replace(/\./g, '_')
+
+            const filePath = join(modelsFolderPath, fileNameWithUnderscore + '.ts')
+            const fileContent = generateModelFileContent(file)
 
             writeFileSync(filePath, fileContent)
         }
