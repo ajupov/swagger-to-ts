@@ -66,9 +66,25 @@ const json = getJson(inputPath)
 const jsonObject = parseJson(json)
 const result = transform(jsonObject)
 
+function getIHttpClientFactoryContent() {
+    return (
+        'export interface IHttpClient {\n' +
+        '    get: <Result>(url: string, data?: any, headers?: HeadersInit) => Promise<Result>\n' +
+        '    post: <Result>(url: string, data?: any, headers?: HeadersInit) => Promise<Result>\n' +
+        '}\n' +
+        '\n' +
+        'export default interface IHttpClientFactory {\n' +
+        '    readonly host: string\n' +
+        '    setNewAccessToken?(accessToken: string): void\n' +
+        '    createClient(host: string): IHttpClient\n' +
+        '}'
+    )
+}
+
 function generateClassContent(file) {
     return (
-        `import IHttpClientFactory from '../../IHttpClientFactory'\n` +
+        `import IHttpClientFactory from '../../IHttpClientFactory'` +
+        `${generateImportsContent(file.imports)}\n` +
         `\n` +
         `export default class ${file.name} {\n` +
         `    private readonly httpClientFactory: IHttpClientFactory\n` +
@@ -79,6 +95,16 @@ function generateClassContent(file) {
         `${generateMethodsContent(file.actions)}` +
         `}`
     )
+}
+
+function generateImportsContent(imports) {
+    const content = imports.map(_import => generateImportContent(_import)).join('\n')
+
+    return content ? `\n${content}` : ''
+}
+
+function generateImportContent(_import) {
+    return `import ${_import} from '../models/${_import}'`
 }
 
 function generateMethodsContent(actions) {
@@ -115,7 +141,7 @@ function generateMethodParameters(parameters) {
 
     const parametersString = parameters.map(parameter => generateMethodParameter(parameter)).join(', ')
 
-    return `{ ${parametersString} }`
+    return `${parametersString}`
 }
 
 function generateMethodParameter(parameter) {
@@ -125,7 +151,7 @@ function generateMethodParameter(parameter) {
 }
 
 function generateMethodReturnType(returnType) {
-    return returnType ? `Promise<${returnType}>` : 'Promise'
+    return returnType.type ? `Promise<${returnType.type}>` : 'Promise<void>'
 }
 
 function generateHttpUrl(path) {
@@ -137,7 +163,7 @@ function generateHttpMethod(httpMethod) {
 }
 
 function generateHttpMethodReturnType(returnType) {
-    return returnType ? `<${returnType}>` : ''
+    return returnType.type ? `<${returnType.type}>` : ''
 }
 
 function generateHttpMethodParameters(parameters) {
@@ -159,7 +185,7 @@ function generateHttpMethodParameter(parameter) {
         case 'boolean':
         case 'number':
         case 'string':
-            return `{ ${parameter.name} }`
+            return `${parameter.name}`
 
         default:
             return parameter.name
@@ -172,23 +198,27 @@ try {
         mkdirSync(outputPath, { recursive: true })
     }
 
-    for (const folder of result) {
-        const folderPath = join(outputPath, folder.name)
+    const iHttpClientFactoryContent = getIHttpClientFactoryContent()
+    writeFileSync(join(outputPath, 'IHttpClientFactory.ts'), iHttpClientFactoryContent)
 
-        // Generate 'activities/clients' folder
+    for (const folder of result) {
+        // products
+        const folderPath = join(outputPath, folder.name.toLowerCase())
+
+        // products/clients
         const clientsFolderPath = join(folderPath, 'clients')
         if (!existsSync(clientsFolderPath)) {
             mkdirSync(clientsFolderPath, { recursive: true })
         }
 
-        // Generate 'activities/models' folder
+        // products/models
         const modelsFolderPath = join(folderPath, 'models')
         if (!existsSync(modelsFolderPath)) {
-            mkdirSync(folderPath, { recursive: true })
+            mkdirSync(modelsFolderPath, { recursive: true })
         }
 
-        for (const file of folder.files) {
-            // Generate ActivitiesClient.ts
+        for (const file of folder.clientFiles) {
+            // ProductsClient.ts
             const filePath = join(clientsFolderPath, file.name + '.ts')
             const fileContent = generateClassContent(file)
 
