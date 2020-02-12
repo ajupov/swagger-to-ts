@@ -307,55 +307,61 @@ function transform(json) {
     for (const folder of folders) {
         for (const clientFile of folder.clientFiles) {
             for (const _import of clientFile.imports) {
-                const component = components[_import]
-
-                let modelFile = folder.modelFiles.find(x => x.name === _import)
-                if (modelFile) {
-                    continue
-                }
-
-                // create new modelFile
-                const fields = []
-                const imports = []
-
-                switch (component.type) {
-                    case 'object':
-                        for (const [propertyName, propertyInfo] of Object.entries(component.properties)) {
-                            const typeWithRef = getTypeByRef(propertyInfo)
-                            if (typeWithRef) {
-                                const field = {
-                                    name: propertyName,
-                                    type: typeWithRef.type,
-                                    required: !propertyInfo.nullable
-                                }
-
-                                fields.push(field)
-                                imports.push(typeWithRef.importType)
-                            } else if (propertyInfo.enum) {
-                            } else {
-                                const field = {
-                                    name: propertyName,
-                                    type: getType(propertyInfo.type),
-                                    required: !propertyInfo.nullable
-                                }
-
-                                fields.push(field)
-                            }
-                        }
-                }
-
-                modelFile = {
-                    name: _import,
-                    imports: imports.filter((_i, index, array) => array.indexOf(_i) === index && _i),
-                    fields: fields
-                }
-
-                folder.modelFiles.push(modelFile)
+                putModelFile(components, folder, _import)
             }
         }
     }
 
     return folders
+}
+
+function putModelFile(components, folder, _import) {
+    let modelFile = folder.modelFiles.find(x => x.name === _import)
+    if (modelFile) {
+        return
+    }
+
+    const component = components[_import]
+
+    // create new modelFile
+    const fields = []
+    const imports = []
+
+    switch (component.type) {
+        case 'object':
+            for (const [propertyName, propertyInfo] of Object.entries(component.properties)) {
+                const typeWithRef = getTypeByRef(propertyInfo)
+                if (typeWithRef) {
+                    const field = {
+                        name: propertyName,
+                        type: typeWithRef.type,
+                        required: !propertyInfo.nullable
+                    }
+
+                    fields.push(field)
+                    imports.push(typeWithRef.importType)
+
+                    putModelFile(components, folder, typeWithRef.importType)
+                } else if (propertyInfo.enum) {
+                } else {
+                    const field = {
+                        name: propertyName,
+                        type: getType(propertyInfo.type),
+                        required: !propertyInfo.nullable
+                    }
+
+                    fields.push(field)
+                }
+            }
+    }
+
+    modelFile = {
+        name: _import,
+        imports: imports.filter((_i, index, array) => array.indexOf(_i) === index && _i),
+        fields: fields
+    }
+
+    folder.modelFiles.push(modelFile)
 }
 
 module.exports = transform
