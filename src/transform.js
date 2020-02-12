@@ -118,7 +118,6 @@ function getParameters(method, pathInfo) {
         case PutMethod:
         case PatchMethod:
         case DeleteMethod:
-            // Old
             if (pathInfo[method].parameters && pathInfo[method].parameters.length > 0) {
                 let parameters = []
 
@@ -151,34 +150,6 @@ function getParameters(method, pathInfo) {
                 return parameters
             }
 
-            // New
-            // const schema = pathInfo[method].requestBody.content[ApplicationJsonContentType].schema
-            // const type = getType(schema)
-
-            // let name = ''
-            // switch (type.type) {
-            //     case 'boolean[]':
-            //     case 'number[]':
-            //     case 'string[]':
-            //         name = 'values'
-            //         break
-            //     default:
-            //         name = type.type
-            //             .split(/(?=[A-Z])/)
-            //             .slice(-1)[0]
-            //             .toLowerCase()
-            //         break
-            // }
-
-            // const parameter = {
-            //     name: name,
-            //     required: true,
-            //     type: type.type,
-            //     importType: type.importType
-            // }
-
-            // return [{ ...parameter }]
-
             throw 'error'
 
         default:
@@ -206,12 +177,25 @@ function getType(type) {
 function getTypeByRef(typeWithRef) {
     const objectPath = typeWithRef[ReferenceObject]
     if (objectPath) {
-        // Dodo.RestaurantCashier.Web.Areas.v2.Models.Products.GetMenuItemResponse
-        // GetMenuItemResponse
         const type = objectPath.split('/').slice(-1)[0]
-        // const typeUnderscored = type.replace(/\./g, '_')
 
         return { type: type, importType: type }
+    }
+
+    return undefined
+}
+
+function getTypeFromArray(schema) {
+    if (schema.type === 'array') {
+        if (schema.items[ReferenceObject]) {
+            const type = schema.items[ReferenceObject].split('/').slice(-1)[0]
+
+            return { type: type + '[]', importType: type }
+        } else {
+            const type = getTypeBySchema(schema.items)
+
+            return { type: type.type + '[]', importType: type.importType }
+        }
     }
 
     return undefined
@@ -221,6 +205,11 @@ function getTypeBySchema(schema) {
     const typeWithRef = getTypeByRef(schema)
     if (typeWithRef) {
         return typeWithRef
+    }
+
+    const arrayType = getTypeFromArray(schema)
+    if (arrayType) {
+        return arrayType
     }
 
     const type = getType(schema.type)
@@ -233,9 +222,7 @@ function getTypeBySchema(schema) {
             const additionalProperties = schema.additionalProperties
             if (additionalProperties) {
                 if (additionalProperties[ReferenceObject]) {
-                    // Dodo.RestaurantCashier.Web.Areas.v2.Models.Products.GetMenuItemResponse
                     const type = additionalProperties[ReferenceObject].split('/').slice(-1)[0]
-                    // const typeUnderscored = type.replace(/\./g, '_')
 
                     return { type: type + '[]', importType: type }
                 } else {
@@ -244,36 +231,18 @@ function getTypeBySchema(schema) {
             } else {
                 return { type: 'object', importType: undefined }
             }
-
-        case 'array':
-            if (schema.items[ReferenceObject]) {
-                // Dodo.RestaurantCashier.Web.Areas.v2.Models.Products.GetMenuItemResponse
-                const type = schema.items[ReferenceObject].split('/').slice(-1)[0]
-                // const typeUnderscored = type.replace(/\./g, '_')
-
-                return { type: type + '[]', importType: type }
-            } else {
-                const type = getTypeBySchema(schema.items)
-
-                return { type: type.type + '[]', importType: type.importType }
-            }
     }
 }
 
 function transform(json) {
     let folders = []
 
-    // /v2/Products/GetPizzas
     for (const [path, pathInfo] of Object.entries(json.paths)) {
-        // GetPizzas
         const actionName = getActionName(path)
-
-        // v2
         const folderName = getFolderName(path)
         const folder = getFolder(folders, folderName)
 
         for (const [method, methodInfo] of Object.entries(pathInfo)) {
-            // ProductsClient
             const fileName = getFileName(methodInfo)
             const clientFile = getClientFile(folder, fileName)
 
@@ -301,7 +270,6 @@ function transform(json) {
         }
     }
 
-    // fill components
     const components = json.components || json.definitions
 
     for (const folder of folders) {
@@ -316,6 +284,10 @@ function transform(json) {
 }
 
 function putModelFile(components, folder, _import) {
+    if (!_import) {
+        return
+    }
+
     let modelFile = folder.modelFiles.find(x => x.name === _import)
     if (modelFile) {
         return
@@ -323,15 +295,27 @@ function putModelFile(components, folder, _import) {
 
     const component = components[_import]
 
-    // create new modelFile
     const fields = []
     const imports = []
 
     switch (component.type) {
         case 'object':
             for (const [propertyName, propertyInfo] of Object.entries(component.properties)) {
+                const arrayType = getTypeFromArray(propertyInfo)
                 const typeWithRef = getTypeByRef(propertyInfo)
-                if (typeWithRef) {
+
+                if (arrayType) {
+                    const field = {
+                        name: propertyName,
+                        type: arrayType.type,
+                        required: !propertyInfo.nullable
+                    }
+
+                    fields.push(field)
+                    imports.push(arrayType.importType)
+
+                    putModelFile(components, folder, arrayType.importType)
+                } else if (typeWithRef) {
                     const field = {
                         name: propertyName,
                         type: typeWithRef.type,
@@ -346,7 +330,7 @@ function putModelFile(components, folder, _import) {
                 } else {
                     const field = {
                         name: propertyName,
-                        type: getType(propertyInfo.type),
+                        type: getType(propertyInfo.type).type,
                         required: !propertyInfo.nullable
                     }
 

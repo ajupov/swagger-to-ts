@@ -100,11 +100,12 @@ function generateClientFileContent(file) {
 function generateModelFileContent(file) {
     const importsContent = generateImportsContent(file.imports)
     const fileNameWithUnderscore = file.name.replace(/\./g, '_')
+    const fieldsContent = generateFieldsContent(file.fields)
 
     return (
         `${importsContent ? importsContent + '\n\n' : ''}` +
         `export default interface ${fileNameWithUnderscore} {\n` +
-        // `${generateMethodsContent(file.actions)}` +
+        `${fieldsContent}\n` +
         `}`
     )
 }
@@ -123,6 +124,17 @@ function generateImportContent(_import) {
 
 function generateMethodsContent(actions) {
     return actions.map(action => generateMethodContent(action)).join('\n')
+}
+
+function generateFieldsContent(fields) {
+    return fields.map(field => generateFieldContent(field)).join('\n')
+}
+
+function generateFieldContent(field) {
+    const required = field.required ? '' : '?'
+    const fieldTypeWithUnderscore = field.type.replace(/\./g, '_')
+
+    return `    ${field.name}${required}: ${fieldTypeWithUnderscore}`
 }
 
 function generateMethodContent(action) {
@@ -256,7 +268,6 @@ try {
             // Model.ts
 
             const fileNameWithUnderscore = file.name.replace(/\./g, '_')
-
             const filePath = join(modelsFolderPath, fileNameWithUnderscore + '.ts')
             const fileContent = generateModelFileContent(file)
 
