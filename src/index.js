@@ -2,7 +2,7 @@
 
 const { argv, hrtime } = require('process')
 const { readFileSync, writeFileSync, mkdirSync, existsSync } = require('fs')
-const { join } = require('path')
+const { join, resolve } = require('path')
 const transform = require('./transform')
 var request = require('sync-request')
 
@@ -33,7 +33,7 @@ function getOutputPath() {
         throw 'No output path provided.'
     }
 
-    return join(__dirname, outputPath)
+    return resolve(outputPath)
 }
 
 function getJson(inputPath) {
