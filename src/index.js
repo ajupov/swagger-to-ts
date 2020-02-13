@@ -244,20 +244,20 @@ function generateHttpMethodParameters(parameters) {
     }
 
     if (parameters.length === 1) {
-        return `, ${generateHttpMethodParameter(parameters[0])}`
+        return `, ${generateHttpMethodParameter(parameters[0], true)}`
     }
 
-    const parametersString = parameters.map(parameter => generateHttpMethodParameter(parameter)).join(', ')
+    const parametersString = parameters.map(parameter => generateHttpMethodParameter(parameter, false)).join(', ')
 
     return `, { ${parametersString} }`
 }
 
-function generateHttpMethodParameter(parameter) {
+function generateHttpMethodParameter(parameter, single) {
     switch (parameter.type) {
         case 'boolean':
         case 'number':
         case 'string':
-            return `${parameter.name}`
+            return single ? `{ ${parameter.name} }` : parameter.name
 
         default:
             return parameter.name

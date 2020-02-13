@@ -9,8 +9,8 @@
     "url": "https://github.com/ajupov/swagger-to-ts.git"
   },
   "scripts": {
-    "generate": "node ./src/index.js --input=./files/example_1.json --output=../.generated/example_1",
-    "generate-by-url": "node ./src/index.js --input=http://localhost:9000/swagger/docs/v2 --output=../.generated/by_url"
+    "generate": "node ./src/index.js --input=./files/example_1.json --output=.generated/example_1",
+    "generate-by-url": "node ./src/index.js --input=http://localhost:9000/swagger/docs/v2 --output=.generated/by_url"
   },
   "engines": {
     "node": ">=6.0.0"
