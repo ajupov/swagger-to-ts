@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const { argv, hrtime } = require('process')
 const { readFileSync, writeFileSync, mkdirSync, existsSync } = require('fs')
 const { join } = require('path')
