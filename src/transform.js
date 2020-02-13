@@ -365,10 +365,13 @@ function putModelFile(components, folder, _import) {
     if (component.enum) {
         isEnum = true
 
-        for (const v of component.enum) {
+        for (let i = 0; i < component.enum.length; i++) {
+            const elementValue = component.enum[i]
+            const elementName = component['x-enumNames'][i]
+
             const field = {
-                name: `_${v}`,
-                type: v,
+                name: elementName || `_${elementValue}`,
+                type: elementValue,
                 required: true
             }
 
