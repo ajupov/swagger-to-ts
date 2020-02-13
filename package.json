@@ -16,7 +16,7 @@
     "node": ">=6.0.0"
   },
   "bin": {
-    "swagger-to-ts": "./index.js"
+    "swagger-to-ts": "./src/index.js"
   },
   "dependencies": {
     "sync-request": "^6.1.0"
