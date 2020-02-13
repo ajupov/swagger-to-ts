@@ -7,7 +7,7 @@ Our plans:
 -   Reformat code
 -   Add support configuration files
 -   Add support transform other OpenAPI functionality
--   Go to typeScript
+-   Go to TypeScript
 -   Add tests
 -   Add publish to npm registry
 
@@ -44,7 +44,7 @@ implements `IHttpClientFactory` from output directory
 and
 
 ```
-const httpClientFactory = new HttpClientFactory('http://localhost:9000)
+const httpClientFactory = new HttpClientFactory('http://localhost:9000')
 
 const valuesClient = new ValuesClient(httpClientFactory)
 
