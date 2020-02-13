@@ -70,6 +70,8 @@ const result = transform(jsonObject)
 
 function getIHttpClientFactoryContent() {
     return (
+        '/* eslint-disable */' +
+        '\n' +
         'export interface IHttpClient {\n' +
         '    get: <Result>(url: string, data?: any, headers?: HeadersInit) => Promise<Result>\n' +
         '    post: <Result>(url: string, data?: any, headers?: HeadersInit) => Promise<Result>\n' +
@@ -85,6 +87,8 @@ function getIHttpClientFactoryContent() {
 
 function generateClientFileContent(file) {
     return (
+        '/* eslint-disable */' +
+        '\n' +
         `import IHttpClientFactory from '../../IHttpClientFactory'` +
         `${generateImportsContent(file.imports)}\n` +
         `\n` +
@@ -105,6 +109,8 @@ function generateModelFileContent(file) {
     const fieldsContent = generateFieldsContent(file.fields)
 
     return (
+        '/* eslint-disable */' +
+        '\n' +
         `${importsContent ? importsContent + '\n\n' : ''}` +
         `export default interface ${fileNameWithUnderscore} {\n` +
         `${fieldsContent}\n` +
@@ -118,6 +124,8 @@ function generateEnumFileContent(file) {
     const fieldsContent = generateEnumFieldsContent(file.fields)
 
     return (
+        '/* eslint-disable */' +
+        '\n' +
         `${importsContent ? importsContent + '\n\n' : ''}` +
         `const enum ${fileNameWithUnderscore} {\n` +
         `${fieldsContent}\n` +
