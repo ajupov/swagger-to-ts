@@ -346,6 +346,10 @@ function transform(json) {
     return folders
 }
 
+function isNullable(property) {
+    return property.nullable || property['x-nullable']
+}
+
 function putModelFile(components, folder, _import) {
     if (!_import) {
         return
@@ -387,7 +391,7 @@ function putModelFile(components, folder, _import) {
                 const field = {
                     name: propertyName,
                     type: arrayType.type,
-                    required: !propertyInfo.nullable
+                    required: !isNullable(propertyInfo)
                 }
 
                 fields.push(field)
@@ -398,7 +402,7 @@ function putModelFile(components, folder, _import) {
                 const field = {
                     name: propertyName,
                     type: typeWithRef.type,
-                    required: !propertyInfo.nullable
+                    required: !isNullable(propertyInfo)
                 }
 
                 fields.push(field)
@@ -409,7 +413,7 @@ function putModelFile(components, folder, _import) {
                 const field = {
                     name: propertyName,
                     type: typeFromObject.type,
-                    required: !propertyInfo.nullable
+                    required: !isNullable(propertyInfo)
                 }
 
                 fields.push(field)
@@ -422,7 +426,7 @@ function putModelFile(components, folder, _import) {
                 const field = {
                     name: propertyName,
                     type: enumTypeName,
-                    required: !propertyInfo.nullable
+                    required: !isNullable(propertyInfo)
                 }
 
                 fields.push(field)
@@ -432,7 +436,7 @@ function putModelFile(components, folder, _import) {
 
                 for (let i = 0; i < propertyInfo.enum.length; i++) {
                     const elementValue = propertyInfo.enum[i]
-                    const elementName = propertyInfo.enumNames[i]
+                    const elementName = propertyInfo['x-enumNames'][i]
 
                     const field = {
                         name: elementName || `_${elementValue}`,
@@ -457,7 +461,7 @@ function putModelFile(components, folder, _import) {
                 const field = {
                     name: propertyName,
                     type: typeWithRef.type,
-                    required: !propertyInfo.nullable
+                    required: !isNullable(propertyInfo)
                 }
 
                 fields.push(field)
@@ -468,7 +472,7 @@ function putModelFile(components, folder, _import) {
                 const field = {
                     name: propertyName,
                     type: getType(propertyInfo.type).type,
-                    required: !propertyInfo.nullable
+                    required: !isNullable(propertyInfo)
                 }
 
                 fields.push(field)

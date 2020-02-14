@@ -10,6 +10,9 @@ Our plans:
 -   Go to TypeScript
 -   Add tests
 -   Add publish to npm registry
+-   Add async filesystem and network operations
+-   Add config to manage nullable-types
+-   Add config for indentation
 
 You can contact me at au073@mail.ru
 
