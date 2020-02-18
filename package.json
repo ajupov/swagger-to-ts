@@ -1,6 +1,6 @@
 {
   "name": "swagger-to-ts",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "title": "TypeScript API clients generator from Swagger",
   "author": "Usman Ayupov <au073@mail.ru>",
   "license": "MIT",
@@ -9,9 +9,9 @@
     "url": "https://github.com/ajupov/swagger-to-ts.git"
   },
   "scripts": {
-    "generate-example-1": "node ./src/index.js --input=./files/example-1.json --output=.generated/example-1",
-    "generate-example-2": "node ./src/index.js --input=./files/example-2.json --output=.generated/example-2",
-    "generate-example-3": "node ./src/index.js --input=http://localhost/swagger/v1/swagger.json --output=.generated/example-3"
+    "generate-example-1": "node ./src/index.js --input=./files/example-1.json --output=generated/example-1",
+    "generate-example-2": "node ./src/index.js --input=./files/example-2.json --output=generated/example-2",
+    "generate-example-3": "node ./src/index.js --input=http://localhost:9000/swagger/v1/swagger.json --output=generated/example-3"
   },
   "engines": {
     "node": ">=6.0.0"

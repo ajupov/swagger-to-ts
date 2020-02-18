@@ -79,8 +79,7 @@ function getIHttpClientFactoryContent() {
         '\n' +
         'export default interface IHttpClientFactory {\n' +
         '    readonly host: string\n' +
-        '    setNewAccessToken?(accessToken: string): void\n' +
-        '    createClient(host: string): IHttpClient\n' +
+        '    createClient(host?: string): IHttpClient\n' +
         '}'
     )
 }
@@ -127,7 +126,7 @@ function generateEnumFileContent(file) {
         '/* eslint-disable */' +
         '\n' +
         `${importsContent ? importsContent + '\n\n' : ''}` +
-        `const enum ${fileNameWithUnderscore} {\n` +
+        `enum ${fileNameWithUnderscore} {\n` +
         `${fieldsContent}\n` +
         `}\n` +
         `\n` +
