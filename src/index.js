@@ -75,6 +75,9 @@ function getIHttpClientFactoryContent() {
         'export interface IHttpClient {\n' +
         '    get: <Result>(url: string, data?: any, headers?: HeadersInit) => Promise<Result>\n' +
         '    post: <Result>(url: string, data?: any, headers?: HeadersInit) => Promise<Result>\n' +
+        '    put: <Result>(url: string, data?: any, headers?: HeadersInit) => Promise<Result>\n' +
+        '    patch: <Result>(url: string, data?: any, headers?: HeadersInit) => Promise<Result>\n' +
+        '    delete: <Result>(url: string, data?: any, headers?: HeadersInit) => Promise<Result>\n' +
         '}\n' +
         '\n' +
         'export default interface IHttpClientFactory {\n' +
